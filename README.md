@@ -7,3 +7,7 @@
 <p align="center">
   A fast, native macOS whiteboard and diagramming app built in Swift.
 </p>
+
+<p align="center">
+<img width="1582" height="1035" alt="image" src="https://github.com/user-attachments/assets/80c75acf-9efa-4be3-8dc2-29b7d8ed1666" />
+</p>
