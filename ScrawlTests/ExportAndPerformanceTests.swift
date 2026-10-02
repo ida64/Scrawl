@@ -61,6 +61,12 @@ import Testing
 }
 
 @Suite(.serialized) struct PerformanceTests {
+    /// Shared CI machines are slower and noisier than a developer Mac; CI raises the budgets
+    /// via SCRAWL_PERF_SCALE (passed as TEST_RUNNER_SCRAWL_PERF_SCALE to xcodebuild).
+    private var budgetScale: Double {
+        Double(ProcessInfo.processInfo.environment["SCRAWL_PERF_SCALE"] ?? "") ?? 1
+    }
+
     private func renderTime(_ count: Int, zoom: CGFloat) -> (ms: Double, drawn: Int) {
         let drawing = SyntheticScenes.make(count: count)
         let scene = Scene(drawing: drawing)
@@ -95,7 +101,7 @@ import Testing
     func renderingAtTypicalZoomStaysInteractive(count: Int) {
         let r = renderTime(count, zoom: 1)
         print("render \(count) @100%: \(String(format: "%.2f", r.ms)) ms, \(r.drawn) visible")
-        #expect(r.ms < 16, "frame budget exceeded: \(r.ms) ms")
+        #expect(r.ms < 16 * budgetScale, "frame budget exceeded: \(r.ms) ms")
     }
 
     @Test(arguments: [1_000, 10_000])
@@ -103,7 +109,7 @@ import Testing
         let r = renderTime(count, zoom: 0)
         print("render \(count) fit-all: \(String(format: "%.2f", r.ms)) ms, \(r.drawn) visible")
         #expect(r.drawn == count)
-        #expect(r.ms < 50, "fit-all frame too slow: \(r.ms) ms")
+        #expect(r.ms < 50 * budgetScale, "fit-all frame too slow: \(r.ms) ms")
     }
 
     @Test func hitTestingIsFastIn10k() {
@@ -120,7 +126,7 @@ import Testing
         }
         let ms = (CACurrentMediaTime() - start) * 1000 / 1000
         print("hit test avg: \(String(format: "%.3f", ms)) ms")
-        #expect(ms < 1)
+        #expect(ms < 1 * budgetScale)
     }
 
     @Test func draggingManyElementsUpdatesIncrementally() {
@@ -132,6 +138,6 @@ import Testing
         let ms = (CACurrentMediaTime() - start) * 1000 / 10
         _ = scene.commitTransaction()
         print("translate 500 of 10k: \(String(format: "%.2f", ms)) ms/step")
-        #expect(ms < 16)
+        #expect(ms < 16 * budgetScale)
     }
 }
