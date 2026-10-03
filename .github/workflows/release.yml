@@ -25,7 +25,7 @@ jobs:
       VERSION: "1.0.${{ github.run_number }}"
       DERIVED_DATA: ${{ github.workspace }}/build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Show toolchain
         run: |
@@ -33,6 +33,10 @@ jobs:
           swift --version
 
       - name: Unit tests
+        env:
+          # TEST_RUNNER_-prefixed variables are forwarded to the test process (prefix removed).
+          # Shared CI machines are slower, so performance budgets are relaxed there.
+          TEST_RUNNER_SCRAWL_PERF_SCALE: "4"
         run: |
           set -o pipefail
           xcodebuild test \
@@ -43,12 +47,11 @@ jobs:
             -derivedDataPath "$DERIVED_DATA/test" \
             -resultBundlePath "$RUNNER_TEMP/UnitTests.xcresult" \
             CODE_SIGN_IDENTITY=- \
-            TEST_RUNNER_SCRAWL_PERF_SCALE=4 \
             | tail -n 60
 
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: unit-test-results
           path: ${{ runner.temp }}/UnitTests.xcresult
